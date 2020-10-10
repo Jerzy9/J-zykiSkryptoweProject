@@ -1,96 +1,67 @@
-
 def set_meeting(dic):
-    #słownik musi być posortowany od najwiekszego czasu pracy do najmniejszego
-    #get_max_hours jest wywoływane dla każdego pracownika
+    #get_max_hours jest wywoływane dla każdego prawnika
 
     all_lawyers = dic.get(0)[0]         #liczba wszystkich pracowników
     needed_lawyers = dic.get(0)[1]      #liczba potrzebnych poracownników na spotkaniu
-    dic_cut = dic.copy()
-    dic_cut.pop(0)                          #usuwa pierwszy rekord z informacją, zostają juz tylko pracownicy
-    # print(dic_cut)
+    lawyers = dic.copy()
+    lawyers.pop(0)                      #usuwa pierwszy rekord z informacją, zostają juz tylko prawnicy
 
-    max_resault = 0
-    for i in dic_cut:
-        resault = get_max_hours(dic_cut, i, needed_lawyers) #dla każdego rekordu szuka najlepszego wyniku
-        max_resault = max(max_resault, resault[0])
-        print("RESAULT: ", resault)
-    print(max_resault)
+    longest_time = 0
+    # get_max_hours jest wywoływane dla każdego prawnika
+    for this_lawyer in lawyers:
+        result = get_max_hours(lawyers, this_lawyer, needed_lawyers) #dla każdego rekordu szuka najlepszego wyniku
+        longest_time = max(longest_time, result[0])
+
+    print(longest_time)
 
 
-def get_max_hours(diction, index, needed_lowyers):
+def get_max_hours(lawyers, this_lawyer, needed_lowyers):
     #dla tego czasu szuka największego możliwego czasu innego prawnika
+    lawyers_copy = lawyers.copy()                      #tworzy kopie słownika z której potem bedzie usuwać wybranych prawników
 
-                #!pytanie czy jak szuka najlepszego czasu dla nie pierwszego pracownika, to czy ma zaczynać od niego i lecieć w dól,
-                #!czy może w dół a później od góry?
-                #!czy od samej góry do dołu omijając siebie (TAK JEST narazie zaimplementowane)
+    this_start_time = lawyers_copy.get(this_lawyer)[0]
+    this_end_time = lawyers_copy.get(this_lawyer)[1]
 
-    dic_copy = diction.copy()                      #tworzy kopie słownika z której potem bedzie usuwać wybranych prawników
+    # usuwamy z listy aktulanie wybranego pracownika, żeby nie porównywać go z samym sobą
+    lawyers_copy.pop(this_lawyer)
 
-    # print(dic)
-
-    this_start_time = dic_copy.get(index)[0]
-    this_end_time = dic_copy.get(index)[1]
-
-    min_start = 0                       #godzina rozpoczęcia spotkania
-    max_end = 0                         #godzina zakończenia spotkania
-    indexs = list()                     #indexy prawników ktorzy są na output
-    indexs.append(index)
+    max_start = 0                               #godzina rozpoczęcia spotkania
+    min_end = 0                                 #godzina zakończenia spotkania
+    lawyers_at_meeting = list()                 #indexy prawników ktorzy są na output
+    lawyers_at_meeting.append(this_lawyer)
     start_meeting = 0
     end_meeting = 100
 
-    for j in range(1, needed_lowyers):
+    for needed_lawyer in range(1, needed_lowyers):
         max_time = 0  # długość spotkania
 
+        for lawyer in lawyers_copy:
 
-        for i in dic_copy:
-            if(i != index): # pętla skipuje czas this_prawnika
-                # print("i: ", i)
-                #szuka największego możliwego czasu
-                # if(min_start):
-                bigger_start = max(this_start_time, dic_copy.get(i)[0])
-                smaller_end = min(this_end_time, dic_copy.get(i)[1])
-                # if(min_start>= bigger_start and max_end<=smaller_end):
-                time = smaller_end - bigger_start
+            bigger_start = max(this_start_time, lawyers_copy.get(lawyer)[0])
+            smaller_end = min(this_end_time, lawyers_copy.get(lawyer)[1])
+            time = smaller_end - bigger_start
 
-                if (index == 1):
-                    print("start_meeting: ", start_meeting)
-                    print("end meeting: ", end_meeting)
+            # szuka prawnika z największym możliwym czasem do aktulanie porównywanego
+            # którego godziny startu i końca wolnego czasu mieszczą się w granicy poprzednich prawników
+            if max_time < time and start_meeting <= bigger_start and end_meeting >= smaller_end:
+                max_time = time
+                max_start = bigger_start
+                min_end = smaller_end
+                index_to_drop = lawyer
 
-                if max_time < time and start_meeting <= bigger_start and end_meeting >= smaller_end:
-                    max_time = time
-                    min_start = bigger_start
-                    max_end = smaller_end
-                    index_to_drop = i
-                    # if(index == 4):
-                    #     print("bigger start: ", bigger_start)
-                    #     print("smaller end: ", smaller_end)
-                    #     print("time: ", time)
-                    #     print("min start: ", min_start)
-                    #     print("max_end: ", max_end)
-                    #     print("-----")
+        # uaktualnienie godzin spotkania
+        start_meeting = max(max_start, start_meeting)
+        end_meeting = min(min_end, end_meeting)
 
-        start_meeting = max(min_start, start_meeting)
-        end_meeting = min(max_end, end_meeting)
-
-
-        if(index_to_drop in dic_copy):
-            dic_copy.pop(index_to_drop)     #usuwa prawnika który został wybrany
-            indexs.append(index_to_drop)    #ale również dodaje go do wyniku
+        # jeżeli został znaleziony pasujący prawnik do wcześniej wybranych to:
+        if(index_to_drop in lawyers_copy):
+            lawyers_copy.pop(index_to_drop)     #usuwa prawnika który został wybrany
+            lawyers_at_meeting.append(index_to_drop)    #ale również dodaje go do wyniku
+        # jeżeli nie, to zwróć 0
         else:
             return [0]
-        # if(index == 4):
 
-            # print("after: ",dic_copy)
-            # print("indexs: ", indexs)
-            # print("index of ROW: ", index)
-            # print("index to drop: ", index_to_drop)
-            # print("len: ", len(dic_copy))
-            # print("------------------")
-
-
-    return [max_time, indexs]           #zwraca maksymalny czas spotkania i liste prawników którzy wzieli w niej udział
-
-
+    return [max_time, lawyers_at_meeting]           #zwraca maksymalny czas spotkania i liste prawników którzy wzieli w niej udział
 
 def init():
     dictionary1 = {
@@ -102,6 +73,7 @@ def init():
         5:[5, 9],
         6:[11, 12]
     }
+
     dictionary2 = {
         0: [6, 3],
         1: [1, 12 ],
@@ -111,8 +83,25 @@ def init():
         5: [9, 12],
         6: [9, 12]
     }
-    # set_meeting(dictionary1)
 
     set_meeting(dictionary2)
 
 init()
+
+# if(index == 4):
+
+            # print("after: ",dic_copy)
+            # print("indexs: ", indexs)
+            # print("index of ROW: ", index)
+            # print("index to drop: ", index_to_drop)
+            # print("len: ", len(dic_copy))
+            # print("------------------")
+            #     print("bigger start: ", bigger_start)
+            #     print("smaller end: ", smaller_end)
+            #     print("time: ", time)
+            #     print("min start: ", min_start)
+            #     print("max_end: ", max_end)
+            #     print("-----")
+
+            # print("start_meeting: ", start_meeting)
+            # print("end meeting: ", end_meeting)
