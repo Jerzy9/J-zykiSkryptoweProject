@@ -56,13 +56,9 @@ def get_max_hours(lawyers, this_lawyer, needed_lowyers):
 
     return [max_time, lawyers_at_meeting]           #zwraca maksymalny czas spotkania i liste prawników którzy wzieli w niej udział
 
-def set_meeting(dic):
+def set_meeting(dic, all_lawyers, needed_lawyers):
     #get_max_hours jest wywoływane dla każdego prawnika
-
-    all_lawyers = dic.get(0)[0]         #liczba wszystkich pracowników
-    needed_lawyers = dic.get(0)[1]      #liczba potrzebnych poracownników na spotkaniu
     lawyers = dic.copy()
-    lawyers.pop(0)                      #usuwa pierwszy rekord z informacją, zostają juz tylko prawnicy
 
     longest_time = [0]
     # get_max_hours jest wywoływane dla każdego prawnika
@@ -71,7 +67,7 @@ def set_meeting(dic):
         if longest_time[0] < result[0]:
             longest_time = result
 
-    print(longest_time)
+    return  longest_time
 
 def read_file_and_create_dictionary():
     dictionary = {}
@@ -81,44 +77,53 @@ def read_file_and_create_dictionary():
     first_numbers = split_numbers_and_delete_enter(first_line)
     all_lawyers = int(first_numbers[0])
     needed_lawyers = first_numbers[1]
-    index = 0
-    for row in file:
-        next_line = split_numbers_and_delete_enter(row)
+    index = 1
+
+    for row in range(1, all_lawyers):
+        next_line = split_numbers_and_delete_enter(file.readline())
         dictionary[index] = next_line
         index += 1
-    print(dictionary)
+
+    next_line = split_numbers(file.readline())
+    dictionary[index] = next_line
+
+    return dictionary, all_lawyers, needed_lawyers
 
 
-def split_numbers_and_delete_enter(line, is_last):
+def split_numbers_and_delete_enter(line):
     numbers = line.split(" ")
-    if not is_last:
-        numbers[1] = numbers[1][0:-1]
-    else:
-        numbers[1] = numbers[1]
+    numbers[0] = int(numbers[0])
+    numbers[1] = int(numbers[1][0:-1])
     return numbers
 
+def split_numbers(line):
+    numbers = line.split(" ")
+    numbers[0] = int(numbers[0])
+    numbers[1] = int(numbers[1])
+    return numbers
+
+def write_result_to_file(result):
+    print("output in result.txt file: ", result)
+    file = open("result.txt", "w")
+    meeting_time = str(result[0]) + "\n"
+    file.write(meeting_time)
+
+    second_line = ""
+    for number_of_lawyer in result[1]:
+        second_line += str(number_of_lawyer) + " "
+
+    file.write(second_line)
+    file.close()
 
 def init():
-    dictionary1 = {
-        0:[6,3],
-        1:[3, 8],
-        2:[4, 12],
-        3:[2, 6],
-        4:[1, 10],
-        5:[5, 9],
-        6:[11, 12]
-    }
 
-    dictionary2 = {
-        0: [6, 3],
-        1: [1, 11],
-        2: [2, 9],
-        3: [3, 4],
-        4: [9, 12],
-        5: [9, 12],
-        6: [9, 12]
-    }
+    input = read_file_and_create_dictionary()
+    dictionary = input[0]
+    all_lawyers = int(input[1])
+    needed_lawyers = int(input[2])
 
-    # set_meeting(dictionary1)
-    read_file_and_create_dictionary()
+
+    output = set_meeting(dictionary, all_lawyers, needed_lawyers)
+    write_result_to_file(output)
+
 init()
