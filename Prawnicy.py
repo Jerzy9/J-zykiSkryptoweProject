@@ -84,13 +84,17 @@ def read_file_and_create_dictionary():
     index = 0
     for row in file:
         next_line = split_numbers_and_delete_enter(row)
-        dictionary
+        dictionary[index] = next_line
         index += 1
+    print(dictionary)
 
 
-def split_numbers_and_delete_enter(line):
+def split_numbers_and_delete_enter(line, is_last):
     numbers = line.split(" ")
-    numbers[1] = numbers[1][:1]
+    if not is_last:
+        numbers[1] = numbers[1][0:-1]
+    else:
+        numbers[1] = numbers[1]
     return numbers
 
 
